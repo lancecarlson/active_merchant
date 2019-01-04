@@ -96,7 +96,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded!', response.message
     assert_equal 'Purchase', response.params['transaction_type']
-    assert_equal 'retained', response.params['payment_method_storage_state']
+    assert %w(retained cached).include?(response.params['payment_method_storage_state'])
     assert !response.params['payment_method_token'].blank?
   end
 

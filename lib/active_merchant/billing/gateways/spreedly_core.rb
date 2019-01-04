@@ -43,10 +43,14 @@ module ActiveMerchant #:nodoc:
         if payment_method.is_a?(String)
           purchase_with_token(money, payment_method, options)
         else
-          MultiResponse.run do |r|
-            r.process { save_card(options[:store], payment_method, options) }
-            r.process { purchase_with_token(money, r.authorization, options) }
-          end
+          request = build_purchase_request(money, payment_method, options)
+          p 'built request'
+          pp request
+          commit("gateways/#{options[:gateway_token] || @options[:gateway_token]}/purchase.xml", request)
+          #MultiResponse.run do |r|
+          #  r.process { save_card(options[:store], payment_method, options) }
+          #  r.process { purchase_with_token(money, r.authorization, options) }
+          #end
         end
       end
 
@@ -155,12 +159,12 @@ module ActiveMerchant #:nodoc:
       end
 
       def purchase_with_token(money, payment_method_token, options)
-        request = auth_purchase_request(money, payment_method_token, options)
+        request = build_purchase_request(money, payment_method_token, options)
         commit("gateways/#{options[:gateway_token] || @options[:gateway_token]}/purchase.xml", request)
       end
 
       def authorize_with_token(money, payment_method_token, options)
-        request = auth_purchase_request(money, payment_method_token, options)
+        request = build_purchase_request(money, payment_method_token, options)
         commit("gateways/#{@options[:gateway_token]}/authorize.xml", request)
       end
 
@@ -175,12 +179,11 @@ module ActiveMerchant #:nodoc:
         commit("gateways/#{@options[:gateway_token]}/verify.xml", request)
       end
 
-      def auth_purchase_request(money, payment_method_token, options)
+      def build_purchase_request(money, payment_method, options)
         build_xml_request('transaction') do |doc|
           add_invoice(doc, money, options)
+          add_payment_method(doc, payment_method, options)
           add_extra_options(:gateway_specific_fields, doc, options)
-          doc.payment_method_token(payment_method_token)
-          doc.retain_on_success(true) if options[:store]
         end
       end
 
@@ -190,6 +193,20 @@ module ActiveMerchant #:nodoc:
         doc.order_id(options[:order_id])
         doc.ip(options[:ip]) if options[:ip]
         doc.description(options[:description]) if options[:description]
+      end
+
+      def add_payment_method(doc, payment_method, options)
+        doc.retain_on_success(true) if options[:store]
+
+        if payment_method.is_a?(String)
+          doc.payment_method_token(payment_method)
+        elsif payment_method.is_a?(CreditCard)
+          add_credit_card(doc, payment_method, options)
+        elsif payment_method.is_a(Check)
+          raise NotImplementedYet
+        else
+          raise 'Payment method not supported'
+        end
       end
 
       def add_credit_card(doc, credit_card, options)

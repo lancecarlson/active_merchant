@@ -8,6 +8,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     @amount = 100
     @credit_card = credit_card('5555555555554444')
     @declined_card = credit_card('4012888888881881')
+    @check = check({routing_number: '021000021', account_number: '9876543210'})
     @existing_payment_method = '3rEkRlZur2hXKbwwRBidHJAIUTO'
     @declined_payment_method = 'UPfh3J3JbekLeYC88BP741JWnS5'
     @existing_transaction = 'PJ5ICgM6h7v9pBNxDCJjRHDDxBC'
@@ -54,6 +55,14 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
 
   def test_successful_purchase_with_credit_card
     assert response = @gateway.purchase(@amount, @credit_card)
+    assert_success response
+    assert_equal 'Succeeded!', response.message
+    assert_equal 'Purchase', response.params['transaction_type']
+    assert_equal 'cached', response.params['payment_method_storage_state']
+  end
+
+  def test_successful_purchase_with_check
+    assert response = @gateway.purchase(@amount, @check)
     assert_success response
     assert_equal 'Succeeded!', response.message
     assert_equal 'Purchase', response.params['transaction_type']

@@ -186,10 +186,10 @@ module ActiveMerchant #:nodoc:
           doc.payment_method_token(payment_method)
         elsif payment_method.is_a?(CreditCard)
           add_credit_card(doc, payment_method, options)
-        elsif payment_method.is_a(Check)
-          raise NotImplementedYet
+        elsif payment_method.is_a?(Check)
+          add_bank_account(doc, payment_method, options)
         else
-          raise 'Payment method not supported'
+          raise TypeError, 'Payment method not supported'
         end
       end
 
@@ -208,6 +208,17 @@ module ActiveMerchant #:nodoc:
           doc.state(options[:billing_address].try(:[], :state))
           doc.zip(options[:billing_address].try(:[], :zip))
           doc.country(options[:billing_address].try(:[], :country))
+        end
+      end
+
+      def add_bank_account(doc, bank_account, options)
+        doc.bank_account do
+          doc.first_name(bank_account.first_name)
+          doc.last_name(bank_account.last_name)
+          doc.bank_routing_number(bank_account.routing_number)
+          doc.bank_account_number(bank_account.account_number)
+          doc.bank_account_type(bank_account.account_type)
+          doc.bank_account_holder_type(bank_account.account_holder_type)
         end
       end
 

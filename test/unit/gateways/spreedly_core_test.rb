@@ -41,13 +41,13 @@ class SpreedlyCoreTest < Test::Unit::TestCase
   end
 
   def test_successful_purchase_with_credit_card
-    @gateway.stubs(:raw_ssl_request).returns(successful_store_response, successful_purchase_response)
+    @gateway.stubs(:raw_ssl_request).returns(successful_purchase_response)
     response = @gateway.purchase(@amount, @credit_card)
 
     assert_success response
     assert !response.test?
 
-    #assert_equal 'K1CRcdN0jK32UyrnZGPOXLRjqJl', response.authorization
+    assert_equal 'K1CRcdN0jK32UyrnZGPOXLRjqJl', response.authorization
     assert_equal 'Succeeded!', response.message
     assert_equal 'Non-U.S. issuing bank does not support AVS.', response.avs_result['message']
     assert_equal 'CVV failed data validation check', response.cvv_result['message']
@@ -65,7 +65,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
   end
 
   def test_failed_purchase_with_credit_card
-    @gateway.stubs(:raw_ssl_request).returns(successful_store_response, failed_purchase_response)
+    @gateway.stubs(:raw_ssl_request).returns(failed_purchase_response)
     response = @gateway.purchase(@amount, @credit_card)
     assert_failure response
 
@@ -121,7 +121,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
   end
 
   def test_successful_authorize_with_credit_card_and_capture
-    @gateway.stubs(:raw_ssl_request).returns(successful_store_response, successful_authorize_response)
+    @gateway.stubs(:raw_ssl_request).returns(successful_authorize_response)
     response = @gateway.authorize(@amount, @credit_card)
 
     assert_success response
@@ -144,7 +144,7 @@ class SpreedlyCoreTest < Test::Unit::TestCase
   end
 
   def test_failed_authorize_with_credit_card
-    @gateway.stubs(:raw_ssl_request).returns(successful_store_response, failed_authorize_response)
+    @gateway.stubs(:raw_ssl_request).returns(failed_authorize_response)
     response = @gateway.authorize(@amount, @credit_card)
     assert_failure response
     assert_equal 'This transaction cannot be processed.', response.message

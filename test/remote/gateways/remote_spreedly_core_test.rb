@@ -88,7 +88,8 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     @credit_card.first_name = ' '
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_failure response
-    assert_equal "First name can't be blank", response.message
+    assert_equal "The payment method is invalid.", response.message
+    assert_equal "First name can't be blank", response.params['payment_method_errors'].strip
   end
 
   def test_successful_purchase_with_store
@@ -141,7 +142,8 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     @credit_card.first_name = ' '
     assert response = @gateway.authorize(@amount, @credit_card)
     assert_failure response
-    assert_equal "First name can't be blank", response.message
+    assert_equal "The payment method is invalid.", response.message
+    assert_equal "First name can't be blank", response.params['payment_method_errors'].strip
   end
 
   def test_successful_authorize_with_store
@@ -149,7 +151,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     assert_success response
     assert_equal 'Succeeded!', response.message
     assert_equal 'Authorization', response.params['transaction_type']
-    assert_equal 'retained', response.params['payment_method_storage_state']
+    assert %w(retained cached).include?(response.params['payment_method_storage_state'])
     assert !response.params['payment_method_token'].blank?
   end
 

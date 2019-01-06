@@ -35,23 +35,13 @@ module ActiveMerchant #:nodoc:
       # Public: Run a purchase transaction.
       #
       # money          - The monetary amount of the transaction in cents.
-      # payment_method - The CreditCard or the Spreedly payment method token.
+      # payment_method - The CreditCard or Check or the Spreedly payment method token.
       # options        - A hash of options:
       #                  :store - Retain the payment method if the purchase
       #                           succeeds.  Defaults to false.  (optional)
       def purchase(money, payment_method, options = {})
-        if payment_method.is_a?(String)
-          purchase_with_token(money, payment_method, options)
-        else
-          request = build_purchase_request(money, payment_method, options)
-          p 'built request'
-          pp request
-          commit("gateways/#{options[:gateway_token] || @options[:gateway_token]}/purchase.xml", request)
-          #MultiResponse.run do |r|
-          #  r.process { save_card(options[:store], payment_method, options) }
-          #  r.process { purchase_with_token(money, r.authorization, options) }
-          #end
-        end
+        request = build_purchase_request(money, payment_method, options)
+        commit("gateways/#{options[:gateway_token] || @options[:gateway_token]}/purchase.xml", request)
       end
 
       # Public: Run an authorize transaction.
@@ -62,14 +52,8 @@ module ActiveMerchant #:nodoc:
       #                  :store - Retain the payment method if the authorize
       #                           succeeds.  Defaults to false.  (optional)
       def authorize(money, payment_method, options = {})
-        if payment_method.is_a?(String)
-          authorize_with_token(money, payment_method, options)
-        else
-          MultiResponse.run do |r|
-            r.process { save_card(options[:store], payment_method, options) }
-            r.process { authorize_with_token(money, r.authorization, options) }
-          end
-        end
+        request = build_purchase_request(money, payment_method, options)
+        commit("gateways/#{@options[:gateway_token]}/authorize.xml", request)
       end
 
       def capture(money, authorization, options={})

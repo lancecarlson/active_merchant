@@ -97,7 +97,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     @credit_card.first_name = ' '
     assert response = @gateway.purchase(@amount, @credit_card)
     assert_failure response
-    assert_equal "The payment method is invalid.", response.message
+    assert_equal 'The payment method is invalid.', response.message
     assert_equal "First name can't be blank", response.params['payment_method_errors'].strip
   end
 
@@ -151,7 +151,7 @@ class RemoteSpreedlyCoreTest < Test::Unit::TestCase
     @credit_card.first_name = ' '
     assert response = @gateway.authorize(@amount, @credit_card)
     assert_failure response
-    assert_equal "The payment method is invalid.", response.message
+    assert_equal 'The payment method is invalid.', response.message
     assert_equal "First name can't be blank", response.params['payment_method_errors'].strip
   end
 

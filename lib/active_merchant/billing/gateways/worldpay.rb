@@ -23,6 +23,26 @@ module ActiveMerchant #:nodoc:
         'diners_club'      => 'DINERS-SSL',
       }
 
+      AVS_CODE_MAP = {
+        'A' => 'M', # Match
+        'B' => 'P', # Postcode matches, address not verified
+        'C' => 'Z', # Postcode matches, address does not match
+        'D' => 'B', # Address matched; postcode not checked
+        'E' => 'I', # Address and postal code not checked
+        'F' => 'A', # Address matches, postcode does not match
+        'G' => 'C', # Address does not match, postcode not checked
+        'H' => 'I', # Address and postcode not provided
+        'I' => 'C', # Address not checked postcode does not match
+        'J' => 'C', # Address and postcode does not match
+      }
+
+      CVC_CODE_MAP = {
+        'A' => 'M', # CVV matches
+        'B' => 'P', # Not provided
+        'C' => 'P', # Not checked
+        'D' => 'N', # Does not match
+      }
+
       def initialize(options = {})
         requires!(options, :login, :password)
         super
@@ -350,7 +370,7 @@ module ActiveMerchant #:nodoc:
           'Authorization' => encoded_credentials
         }
         if options[:cookie]
-          headers['Set-Cookie'] = options[:cookie] if options[:cookie]
+          headers['Cookie'] = options[:cookie] if options[:cookie]
         end
         headers
       end
@@ -370,7 +390,10 @@ module ActiveMerchant #:nodoc:
           raw,
           :authorization => authorization_from(raw),
           :error_code => error_code_from(success, raw),
-          :test => test?)
+          :test => test?,
+          :avs_result => AVSResult.new(code: AVS_CODE_MAP[raw[:avs_result_code_description]]),
+          :cvv_result => CVVResult.new(CVC_CODE_MAP[raw[:cvc_result_code_description]])
+        )
       rescue ActiveMerchant::ResponseError => e
         if e.response.code.to_s == '401'
           return Response.new(false, 'Invalid credentials', {}, :test => test?)

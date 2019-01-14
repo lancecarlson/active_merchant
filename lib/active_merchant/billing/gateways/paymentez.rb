@@ -52,6 +52,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_customer_data(post, options)
+        add_extra_params(post, options)
         action = payment.is_a?(String) ? 'debit' : 'debit_cc'
 
         commit_transaction(action, post)
@@ -63,6 +64,7 @@ module ActiveMerchant #:nodoc:
         add_invoice(post, money, options)
         add_payment(post, payment)
         add_customer_data(post, options)
+        add_extra_params(post, options)
 
         commit_transaction('authorize', post)
       end
@@ -166,6 +168,13 @@ module ActiveMerchant #:nodoc:
           post[:card][:cvc] = payment.verification_value
           post[:card][:type] = CARD_MAPPING[payment.brand]
         end
+      end
+
+      def add_extra_params(post, options)
+        extra_params = {}
+        extra_params.merge!(options[:extra_params]) if options[:extra_params]
+
+        post['extra_params'] = extra_params unless extra_params.empty?
       end
 
       def parse(body)
